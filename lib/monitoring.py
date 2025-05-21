@@ -78,21 +78,50 @@ class Monitor:
             device_type = device_info.get('device_type', 'cisco_ios')
             version_output = cls._simulator.get_response(device_type, 'show version')
             clock_output = cls._simulator.get_response(device_type, 'show clock')
+            interfaces_output = cls._simulator.get_response(device_type, 'show ip interface brief')
             
-            # Create a simulated facts dictionary
+            # Parse interfaces from the interface output
+            interfaces = []
+            if interfaces_output:
+                for line in interfaces_output.split('\n'):
+                    if 'Interface' not in line and line.strip():  # Skip header and empty lines
+                        interface_name = line.split()[0]
+                        interfaces.append(interface_name)
+            
+            # Extract uptime from the version output if available
+            uptime = "1 day, 0 hours, 0 minutes"  # Default
+            if version_output and 'uptime is' in version_output:
+                uptime_parts = version_output.split('uptime is')[1].split('\n')[0].strip()
+                uptime = uptime_parts
+                
+            # Extract serial number if available
+            serial = f"SIM{device_info.get('hostname', 'UNKNOWN')[:3]}12345"  # Default
+            if version_output and 'Processor board ID' in version_output:
+                serial_line = [line for line in version_output.split('\n') if 'Processor board ID' in line]
+                if serial_line:
+                    serial = serial_line[0].split('Processor board ID')[1].strip()
+            
+            # Create a comprehensive simulated facts dictionary
             return {
                 'hostname': device_info.get('hostname', 'unknown'),
                 'version': version_output.split('\n')[0] if version_output else 'Unknown',
-                'uptime': version_output.split('uptime is ')[1].split('\n')[0] if 'uptime is ' in version_output else 'Unknown',
-                'serial': f"SIM{device_info.get('hostname', 'UNKNOWN')[:3]}12345",
-                'model': f"SIM-{device_info.get('device_type', 'GENERIC').upper()}",
-                'interfaces': [
+                'uptime': uptime,
+                'serial': serial,
+                'model': f"CISCO2901/K9" if 'cisco' in device_type else f"SIM-{device_type.upper()}",
+                'interfaces': interfaces if interfaces else [
                     'GigabitEthernet0/0', 
                     'GigabitEthernet0/1', 
                     'GigabitEthernet0/2', 
                     'Loopback0'
                 ],
-                'time': clock_output
+                'time': clock_output,
+                'os_type': 'ios' if 'cisco' in device_type else device_type,
+                'vendor': 'cisco' if 'cisco' in device_type else device_type.split('_')[0],
+                'memory': {
+                    'total': '512MB',
+                    'free': '256MB'
+                },
+                'configuration': 'Running'
             }
         
         try:
@@ -105,11 +134,23 @@ class Monitor:
             
             result = ansible_runner.run_playbook('playbooks/get_device_status.yml', extra_vars)
             
-            if result.get('success', False) and 'facts' in result:
+            if result and result.get('success', False) and 'facts' in result:
                 return result['facts']
+            
+            # If we get here, the actual facts gathering failed, so use the simulator as fallback
+            if DEMO_MODE and cls._simulator:
+                print(f"Using simulator for device facts as a fallback")
+                return cls.get_device_facts(device_info)
+            
             return None
         except Exception as e:
             print(f"Error getting device facts: {str(e)}")
+            
+            # If there's an error, use the simulator as fallback in demo mode
+            if DEMO_MODE and cls._simulator:
+                print(f"Using simulator for device facts due to error: {str(e)}")
+                return cls.get_device_facts(device_info)
+                
             return None
     
     @classmethod

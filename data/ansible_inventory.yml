@@ -1,24 +1,18 @@
 all:
   children:
-    demo:
-      hosts:
-        demo-router1: &id001
-          ansible_host: 192.168.1.1
-          ansible_network_os: cisco_ios
-          ansible_password: demo123
-          ansible_port: 22
-          ansible_user: demo
-        demo-switch1: &id002
-          ansible_host: 192.168.1.2
-          ansible_network_os: cisco_ios
-          ansible_password: demo123
-          ansible_port: 22
-          ansible_user: demo
-    routers:
-      hosts:
-        demo-router1: *id001
-    switches:
-      hosts:
-        demo-switch1: *id002
-    ungrouped:
-      hosts: {}
+    network:
+      children:
+        routers:
+          hosts:
+            demo-router1:
+              ansible_host: 192.168.1.1
+              ansible_network_os: ios
+              ansible_password: admin123
+              ansible_user: admin
+        switches:
+          hosts:
+            demo-switch1:
+              ansible_host: 192.168.1.2
+              ansible_network_os: ios
+              ansible_password: admin123
+              ansible_user: admin

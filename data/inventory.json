@@ -3,8 +3,8 @@
     "hostname": "demo-router1",
     "ip": "192.168.1.1",
     "device_type": "cisco_ios",
-    "username": "demo",
-    "password": "demo123",
+    "username": "admin",
+    "password": "admin123",
     "ssh_port": 22,
     "groups": [
       "demo",
@@ -15,8 +15,8 @@
     "hostname": "demo-switch1",
     "ip": "192.168.1.2",
     "device_type": "cisco_ios",
-    "username": "demo",
-    "password": "demo123",
+    "username": "admin",
+    "password": "admin123",
     "ssh_port": 22,
     "groups": [
       "demo",

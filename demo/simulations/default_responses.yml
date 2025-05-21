@@ -1,194 +1,112 @@
----
-# Default simulation responses for NetMan demo
-
 cisco_ios:
-  "show version": |
-    Cisco IOS Software, C2900 Software (C2900-UNIVERSALK9-M), Version 15.7(3)M2, RELEASE SOFTWARE (fc1)
-    Technical Support: http://www.cisco.com/techsupport
-    Copyright (c) 1986-2018 by Cisco Systems, Inc.
-    Compiled Wed 01-Aug-18 16:45 by prod_rel_team
-
-    ROM: System Bootstrap, Version 15.0(1r)M15, RELEASE SOFTWARE (fc1)
-
-    demo-router1 uptime is 1 day, 2 hours, 5 minutes
-    System returned to ROM by power-on
-    System restarted at 12:05:33 UTC Mon Jan 1 2023
-    System image file is "flash:c2900-universalk9-mz.SPA.157-3.M2.bin"
-    Last reload type: Normal Reload
-    Last reload reason: power-on
-  
-  "show clock": "12:05:33.000 UTC Mon Jan 1 2023"
-  
-  "show interfaces": |
-    GigabitEthernet0/0 is up, line protocol is up 
-      Hardware is CN Gigabit Ethernet, address is aabb.cc00.0100 (bia aabb.cc00.0100)
-      Description: WAN Interface
-      Internet address is 10.0.0.1/24
-      MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec, 
-         reliability 255/255, txload 1/255, rxload 1/255
-      Encapsulation ARPA, loopback not set
-      Keepalive set (10 sec)
-      Full-duplex, 1000Mb/s, media type is RJ45
-      output flow-control is off, input flow-control is off
-      ARP type: ARPA, ARP Timeout 04:00:00
-      Last input 00:00:05, output 00:00:01, output hang never
-      Last clearing of "show interface" counters never
-      Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
-      Queueing strategy: fifo
-      Output queue: 0/40 (size/max)
-      5 minute input rate 25000 bits/sec, 40 packets/sec
-      5 minute output rate 21000 bits/sec, 35 packets/sec
-         1250 packets input, 125000 bytes, 0 no buffer
-         Received 650 broadcasts (0 IP multicasts)
-         0 runts, 0 giants, 0 throttles 
-         0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
-         0 watchdog, 650 multicast, 0 pause input
-         1150 packets output, 115000 bytes, 0 underruns
-         0 output errors, 0 collisions, 1 interface resets
-         0 unknown protocol drops
-         0 babbles, 0 late collision, 0 deferred
-         0 lost carrier, 0 no carrier, 0 pause output
-         0 output buffer failures, 0 output buffers swapped out
-         
-    GigabitEthernet0/1 is up, line protocol is up 
-      Hardware is CN Gigabit Ethernet, address is aabb.cc00.0101 (bia aabb.cc00.0101)
-      Description: LAN Interface
-      Internet address is 192.168.1.1/24
-      MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec, 
-         reliability 255/255, txload 1/255, rxload 1/255
-      Encapsulation ARPA, loopback not set
-      Keepalive set (10 sec)
-      Full-duplex, 1000Mb/s, media type is RJ45
-      output flow-control is off, input flow-control is off
-      ARP type: ARPA, ARP Timeout 04:00:00
-      Last input 00:00:02, output 00:00:00, output hang never
-      Last clearing of "show interface" counters never
-      Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
-      Queueing strategy: fifo
-      Output queue: 0/40 (size/max)
-      5 minute input rate 52000 bits/sec, 75 packets/sec
-      5 minute output rate 48000 bits/sec, 70 packets/sec
-         2500 packets input, 250000 bytes, 0 no buffer
-         Received 1200 broadcasts (0 IP multicasts)
-         0 runts, 0 giants, 0 throttles 
-         0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
-         0 watchdog, 1200 multicast, 0 pause input
-         2300 packets output, 230000 bytes, 0 underruns
-         0 output errors, 0 collisions, 0 interface resets
-         0 unknown protocol drops
-         0 babbles, 0 late collision, 0 deferred
-         0 lost carrier, 0 no carrier, 0 pause output
-         0 output buffer failures, 0 output buffers swapped out
-  
-  "show ip interface brief": |
-    Interface                  IP-Address      OK? Method Status                Protocol
-    GigabitEthernet0/0         10.0.0.1        YES NVRAM  up                    up      
-    GigabitEthernet0/1         192.168.1.1     YES NVRAM  up                    up      
-    GigabitEthernet0/2         unassigned      YES NVRAM  administratively down down    
-    Loopback0                  1.1.1.1         YES NVRAM  up                    up
-  
-  "show running-config": |
-    Building configuration...
-
-    Current configuration : 1782 bytes
-    !
-    ! Last configuration change at 12:05:33 UTC Mon Jan 1 2023
-    !
-    version 15.7
-    service timestamps debug datetime msec
-    service timestamps log datetime msec
-    no service password-encryption
-    !
-    hostname demo-router1
-    !
-    boot-start-marker
-    boot-end-marker
-    !
-    !
-    enable secret 5 $1$demo$cGBKMa8pVS.wcZ6EwBj3R1
-    !
-    no aaa new-model
-    !
-    !
-    !
-    ip domain name demo.local
-    ip cef
-    no ipv6 cef
-    !
-    !
-    !
-    username admin privilege 15 secret 5 $1$demo$F7BFhvKjm5kEcYLes3OKo1
-    !
-    !
-    !
-    interface GigabitEthernet0/0
-     description WAN Interface
-     ip address 10.0.0.1 255.255.255.0
-     duplex auto
-     speed auto
-    !
-    interface GigabitEthernet0/1
-     description LAN Interface
-     ip address 192.168.1.1 255.255.255.0
-     duplex auto
-     speed auto
-    !
-    interface GigabitEthernet0/2
-     no ip address
-     shutdown
-     duplex auto
-     speed auto
-    !
-    !
-    router ospf 1
-     network 10.0.0.0 0.0.0.255 area 0
-     network 192.168.1.0 0.0.0.255 area 0
-    !
-    ip forward-protocol nd
-    !
-    !
-    no ip http server
-    no ip http secure-server
-    !
-    !
-    !
-    !
-    snmp-server community demopublic RO
-    snmp-server contact Demo Admin
-    snmp-server location Demo Lab
-    !
-    !
-    !
-    line con 0
-     logging synchronous
-    line aux 0
-    line vty 0 4
-     transport input ssh
-     login local
-    !
-    ntp server 10.0.0.10
-    ntp server 10.0.0.11
-    !
-    end
-
+  show version: "Cisco IOS Software, C2900 Software (C2900-UNIVERSALK9-M), Version\
+    \ 15.7(3)M2, RELEASE SOFTWARE (fc1)\nTechnical Support: http://www.cisco.com/techsupport\n\
+    Copyright (c) 1986-2018 by Cisco Systems, Inc.\nCompiled Wed 01-Aug-18 16:45 by\
+    \ prod_rel_team\n\nROM: System Bootstrap, Version 15.0(1r)M15, RELEASE SOFTWARE\
+    \ (fc1)\n\ndemo-router1 uptime is 1 day, 2 hours, 5 minutes\nSystem returned to\
+    \ ROM by power-on\nSystem restarted at 12:05:33 UTC Mon Jan 1 2023\nSystem image\
+    \ file is \"flash:c2900-universalk9-mz.SPA.157-3.M2.bin\"\nLast reload type: Normal\
+    \ Reload\nLast reload reason: power-on\n\nProcessor board ID FTX1234ABCD\n1 Gigabit\
+    \ Ethernet interface\n1 Virtual Private Network (VPN) Module\n256K bytes of non-volatile\
+    \ configuration memory.\n512MB of DRAM Memory\n\nLicense Info:\nLicense UDI:\n\
+    -------------------------------------------------\nDevice#   PID             \
+    \      SN\n-------------------------------------------------\n*0        CISCO2901/K9\
+    \          FTX1234ABCD      \n\nTechnology Package License Information for Module:'c2900'\
+    \ \n----------------------------------------------------------------\nTechnology\
+    \     Technology-package          Technology-package\n               Current \
+    \           Type     Next reboot\n----------------------------------------------------------------\n\
+    ipbase         ipbasek9            Permanent  ipbasek9\nsecurity       securityk9\
+    \          Permanent  securityk9\nuc             None                None    \
+    \   None\ndata           None                None       None\n\nConfiguration\
+    \ register is 0x2102"
+  show clock: 12:05:33.000 UTC Mon Jan 1 2023
+  show interfaces: "GigabitEthernet0/0 is up, line protocol is up \n  Hardware is\
+    \ CN Gigabit Ethernet, address is aabb.cc00.0100 (bia aabb.cc00.0100)\n  Description:\
+    \ WAN Interface\n  Internet address is 10.0.0.1/24\n  MTU 1500 bytes, BW 1000000\
+    \ Kbit/sec, DLY 10 usec, \n     reliability 255/255, txload 1/255, rxload 1/255\n\
+    \  Encapsulation ARPA, loopback not set\n  Keepalive set (10 sec)\n  Full-duplex,\
+    \ 1000Mb/s, media type is RJ45\n  output flow-control is off, input flow-control\
+    \ is off\n  ARP type: ARPA, ARP Timeout 04:00:00\n  Last input 00:00:05, output\
+    \ 00:00:01, output hang never\n  Last clearing of \"show interface\" counters\
+    \ never\n  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops:\
+    \ 0\n  Queueing strategy: fifo\n  Output queue: 0/40 (size/max)\n  5 minute input\
+    \ rate 25000 bits/sec, 40 packets/sec\n  5 minute output rate 21000 bits/sec,\
+    \ 35 packets/sec\n     1250 packets input, 125000 bytes, 0 no buffer\n     Received\
+    \ 650 broadcasts (0 IP multicasts)\n     0 runts, 0 giants, 0 throttles \n   \
+    \  0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored\n     0 watchdog, 650\
+    \ multicast, 0 pause input\n     1150 packets output, 115000 bytes, 0 underruns\n\
+    \     0 output errors, 0 collisions, 1 interface resets\n     0 unknown protocol\
+    \ drops\n     0 babbles, 0 late collision, 0 deferred\n     0 lost carrier, 0\
+    \ no carrier, 0 pause output\n     0 output buffer failures, 0 output buffers\
+    \ swapped out\n     \nGigabitEthernet0/1 is up, line protocol is up \n  Hardware\
+    \ is CN Gigabit Ethernet, address is aabb.cc00.0101 (bia aabb.cc00.0101)\n  Description:\
+    \ LAN Interface\n  Internet address is 192.168.1.1/24\n  MTU 1500 bytes, BW 1000000\
+    \ Kbit/sec, DLY 10 usec, \n     reliability 255/255, txload 1/255, rxload 1/255\n\
+    \  Encapsulation ARPA, loopback not set\n  Keepalive set (10 sec)\n  Full-duplex,\
+    \ 1000Mb/s, media type is RJ45\n  output flow-control is off, input flow-control\
+    \ is off\n  ARP type: ARPA, ARP Timeout 04:00:00\n  Last input 00:00:02, output\
+    \ 00:00:00, output hang never\n  Last clearing of \"show interface\" counters\
+    \ never\n  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops:\
+    \ 0\n  Queueing strategy: fifo\n  Output queue: 0/40 (size/max)\n  5 minute input\
+    \ rate 52000 bits/sec, 75 packets/sec\n  5 minute output rate 48000 bits/sec,\
+    \ 70 packets/sec\n     2500 packets input, 250000 bytes, 0 no buffer\n     Received\
+    \ 1200 broadcasts (0 IP multicasts)\n     0 runts, 0 giants, 0 throttles \n  \
+    \   0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored\n     0 watchdog, 1200\
+    \ multicast, 0 pause input\n     2300 packets output, 230000 bytes, 0 underruns\n\
+    \     0 output errors, 0 collisions, 0 interface resets\n     0 unknown protocol\
+    \ drops\n     0 babbles, 0 late collision, 0 deferred\n     0 lost carrier, 0\
+    \ no carrier, 0 pause output\n     0 output buffer failures, 0 output buffers\
+    \ swapped out"
+  show ip interface brief: "Interface                  IP-Address      OK? Method\
+    \ Status                Protocol\nGigabitEthernet0/0         10.0.0.1        YES\
+    \ NVRAM  up                    up      \nGigabitEthernet0/1         192.168.1.1\
+    \     YES NVRAM  up                    up      \nGigabitEthernet0/2         unassigned\
+    \      YES NVRAM  administratively down down    \nLoopback0                  1.1.1.1\
+    \         YES NVRAM  up                    up"
+  show running-config: "Building configuration...\n\nCurrent configuration : 1782\
+    \ bytes\n!\n! Last configuration change at 12:05:33 UTC Mon Jan 1 2023\n!\nversion\
+    \ 15.7\nservice timestamps debug datetime msec\nservice timestamps log datetime\
+    \ msec\nno service password-encryption\n!\nhostname demo-router1\n!\nboot-start-marker\n\
+    boot-end-marker\n!\n!\nenable secret 5 $1$demo$cGBKMa8pVS.wcZ6EwBj3R1\n!\nno aaa\
+    \ new-model\n!\n!\n!\nip domain name demo.local\nip cef\nno ipv6 cef\n!\n!\n!\n\
+    username admin privilege 15 secret 5 $1$demo$F7BFhvKjm5kEcYLes3OKo1\n!\n!\n!\n\
+    interface GigabitEthernet0/0\n description WAN Interface\n ip address 10.0.0.1\
+    \ 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/1\n\
+    \ description LAN Interface\n ip address 192.168.1.1 255.255.255.0\n duplex auto\n\
+    \ speed auto\n!\ninterface GigabitEthernet0/2\n no ip address\n shutdown\n duplex\
+    \ auto\n speed auto\n!\n!\nrouter ospf 1\n network 10.0.0.0 0.0.0.255 area 0\n\
+    \ network 192.168.1.0 0.0.0.255 area 0\n!\nip forward-protocol nd\n!\n!\nno ip\
+    \ http server\nno ip http secure-server\n!\n!\n!\n!\nsnmp-server community demopublic\
+    \ RO\nsnmp-server contact Demo Admin\nsnmp-server location Demo Lab\n!\n!\n!\n\
+    line con 0\n logging synchronous\nline aux 0\nline vty 0 4\n transport input ssh\n\
+    \ login local\n!\nntp server 10.0.0.10\nntp server 10.0.0.11\n!\nend"
 junos:
-  "show version": |
-    Hostname: demo-juniper1
-    Model: srx300
-    JUNOS Software Release [20.2R1.10]
+  show version: 'Hostname: demo-juniper1
 
+    Model: srx300
+
+    JUNOS Software Release [20.2R1.10]'
 arista_eos:
-  "show version": |
-    Arista DCS-7280SE-68-F
+  show version: 'Arista DCS-7280SE-68-F
+
     Hardware version: 01.00
+
     Serial number: ABC12345678
+
     System MAC address: 001c.1234.5678
 
+
     Software image version: 4.22.1F
+
     Architecture: i386
+
     Internal build version: 4.22.1F-12345678.42211F
+
     Internal build ID: 58fde4bc-f991-4810-b717-d670e436da94
 
+
     Uptime: 1 day, 2 hours and 5 minutes
+
     Total memory: 8051592 kB
-    Free memory: 5337688 kB
+
+    Free memory: 5337688 kB'
