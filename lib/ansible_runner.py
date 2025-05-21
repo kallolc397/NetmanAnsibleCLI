@@ -214,6 +214,17 @@ class AnsibleRunner:
         if 'backup_config' in playbook_path:
             # Simulate backup config playbook
             backup_file = extra_vars.get('backup_file', '/tmp/backup.cfg') if extra_vars else '/tmp/backup.cfg'
+            
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(backup_file), exist_ok=True)
+            
+            # Get the config from simulator
+            config = self._simulator.get_response(device_type, 'show running-config')
+            
+            # Write config to backup file
+            with open(backup_file, 'w') as f:
+                f.write(config or "! Empty configuration (simulated)")
+                
             result['backup_path'] = backup_file
             result['changed'] = True
             
