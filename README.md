@@ -8,6 +8,7 @@ NetMan is a Python CLI tool for managing network devices using Ansible for confi
 - **Configuration Management**: Push, backup, compare, and track configurations with Git
 - **Monitoring**: Check device status, connectivity, and retrieve detailed system information
 - **Template Management**: Create and manage Jinja2 configuration templates for different device types
+- **Multi-vendor Support**: Works with Cisco IOS, Cisco ACI, Juniper, and Palo Alto devices
 - **Ansible Integration**: Leverage Ansible's powerful network automation capabilities
 - **Demo Mode**: Test and demonstrate functionality without requiring real network devices
 
@@ -156,7 +157,10 @@ netman/
 │   ├── demo_connectivity.yml # Demo connectivity testing
 │   └── get_device_status.yml # Playbook for checking status
 ├── templates/             # Configuration templates
-│   └── cisco_base.j2      # Base Cisco IOS template
+│   ├── cisco_base.j2      # Base Cisco IOS template
+│   ├── cisco_aci.j2       # Cisco ACI template
+│   ├── juniper_srx.j2     # Juniper SRX template
+│   └── paloalto_fw.j2     # Palo Alto firewall template
 ├── data/                  # Device inventory data
 │   ├── inventory.json     # JSON inventory data
 │   └── ansible_inventory.yml # Generated Ansible inventory
@@ -179,9 +183,19 @@ Add a Cisco router:
 python netman.py inventory add router1 --ip 192.168.1.1 --device-type cisco_ios --username admin --password Cisco123 --groups core,production
 ```
 
-Add a Juniper switch:
+Add a Juniper SRX firewall:
 ```bash
-python netman.py inventory add switch1 --ip 192.168.2.1 --device-type junos --username admin --password Juniper123 --ssh-port 22 --groups access,office
+python netman.py inventory add srx1 --ip 192.168.2.1 --device-type junos --username admin --password Juniper123 --ssh-port 22 --groups firewalls,core
+```
+
+Add a Palo Alto firewall:
+```bash
+python netman.py inventory add pa1 --ip 192.168.3.1 --device-type panos --username admin --password PaloAlto123 --groups firewalls,dmz
+```
+
+Add a Cisco ACI controller:
+```bash
+python netman.py inventory add apic1 --ip 10.0.0.1 --device-type cisco_aci --username admin --password Cisco123 --groups fabric,datacenter
 ```
 
 ### Working with Configuration Templates
