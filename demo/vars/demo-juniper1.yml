@@ -1,0 +1,106 @@
+---
+# Demo variable file for Juniper SRX device
+
+# Basic device info
+hostname: demo-juniper1
+domain_name: demo.local
+username: admin
+password: juniper123
+
+# Interface configuration
+interfaces:
+  - name: ge-0/0/0
+    description: "WAN Interface"
+    unit: 0
+    family: inet
+    address: "10.0.0.2/24"
+    
+  - name: ge-0/0/1
+    description: "LAN Interface"
+    unit: 0
+    family: inet
+    address: "192.168.2.1/24"
+    
+  - name: lo0
+    description: "Loopback Interface"
+    unit: 0
+    family: inet
+    address: "2.2.2.2/32"
+
+# Security zones
+security_zones:
+  - name: UNTRUST
+    interfaces:
+      - ge-0/0/0.0
+    screen: untrust-screen
+    
+  - name: TRUST
+    interfaces:
+      - ge-0/0/1.0
+    screen: trust-screen
+
+# Security policies
+security_policies:
+  - from_zone: TRUST
+    to_zone: UNTRUST
+    policy:
+      - name: Allow_Outbound
+        match:
+          - source_address: any
+          - destination_address: any
+          - application: any
+        then:
+          - permit
+          - log:
+            - session-init
+            - session-close
+      
+  - from_zone: UNTRUST
+    to_zone: TRUST
+    policy:
+      - name: Block_Inbound
+        match:
+          - source_address: any
+          - destination_address: any
+          - application: any
+        then:
+          - deny
+          - log:
+            - session-init
+
+# Routing configuration
+routing:
+  static_routes:
+    - destination: 0.0.0.0/0
+      next_hop: 10.0.0.1
+      
+  ospf:
+    areas:
+      - id: 0.0.0.0
+        interfaces:
+          - ge-0/0/1.0
+          - lo0.0
+
+# NTP configuration
+ntp:
+  servers:
+    - 10.0.0.10
+    - 10.0.0.11
+
+# System services
+system_services:
+  - ssh
+  - web-management
+  - netconf
+
+# SNMP configuration
+snmp:
+  community: juniper-public
+  contact: "Demo Admin"
+  location: "Demo Lab"
+
+# System logging
+syslog:
+  host: 10.0.0.20
+  facility: local7
+  level: info

@@ -1,0 +1,441 @@
+---
+# Simulation responses for Juniper and Palo Alto devices
+
+junos:
+  "show version": |
+    Model: srx300
+    Junos: 20.4R3-S1
+    JUNOS Software Release [20.4R3-S1]
+    
+    Model: SRX300
+    Serial Number: AD2019AA0123
+    Boot ROM version: 9.5
+    Uptime: 10 days, 4 hours, 25 minutes
+  
+  "show configuration": |
+    ## Last commit: 2023-01-01 12:05:33 UTC by admin
+    version 20.4R3-S1;
+    system {
+        host-name demo-juniper1;
+        domain-name demo.local;
+        root-authentication {
+            encrypted-password "$1$demo$F7BFhvKjm5kEcYLes3OKo1"; ## SECRET-DATA
+        }
+        login {
+            user admin {
+                class super-user;
+                authentication {
+                    encrypted-password "$1$demo$F7BFhvKjm5kEcYLes3OKo1"; ## SECRET-DATA
+                }
+            }
+        }
+        services {
+            ssh;
+            web-management {
+                http {
+                    interface fxp0.0;
+                }
+                https {
+                    system-generated-certificate;
+                    interface fxp0.0;
+                }
+            }
+            netconf {
+                ssh;
+            }
+        }
+        ntp {
+            server 10.0.0.10;
+            server 10.0.0.11;
+        }
+        syslog {
+            host 10.0.0.20 {
+                facility local7;
+                level info;
+            }
+        }
+    }
+    interfaces {
+        ge-0/0/0 {
+            description "WAN Interface";
+            unit 0 {
+                family inet {
+                    address 10.0.0.2/24;
+                }
+            }
+        }
+        ge-0/0/1 {
+            description "LAN Interface";
+            unit 0 {
+                family inet {
+                    address 192.168.2.1/24;
+                }
+            }
+        }
+        lo0 {
+            description "Loopback Interface";
+            unit 0 {
+                family inet {
+                    address 2.2.2.2/32;
+                }
+            }
+        }
+    }
+    routing-options {
+        static {
+            route 0.0.0.0/0 next-hop 10.0.0.1;
+        }
+    }
+    protocols {
+        ospf {
+            area 0.0.0.0 {
+                interface ge-0/0/1.0;
+                interface lo0.0;
+            }
+        }
+    }
+    security {
+        screen {
+            ids-option untrust-screen {
+                icmp {
+                    ping-death;
+                }
+                ip {
+                    source-route-option;
+                    tear-drop;
+                }
+                tcp {
+                    syn-flood {
+                        alarm-threshold 1024;
+                        attack-threshold 200;
+                        source-threshold 1024;
+                        destination-threshold 2048;
+                        timeout 20;
+                    }
+                    land;
+                }
+            }
+            ids-option trust-screen {
+                icmp {
+                    ping-death;
+                }
+                ip {
+                    source-route-option;
+                    tear-drop;
+                }
+                tcp {
+                    syn-flood {
+                        alarm-threshold 1024;
+                        attack-threshold 200;
+                        source-threshold 1024;
+                        destination-threshold 2048;
+                        timeout 20;
+                    }
+                    land;
+                }
+            }
+        }
+        zones {
+            security-zone UNTRUST {
+                screen untrust-screen;
+                interfaces {
+                    ge-0/0/0.0;
+                }
+            }
+            security-zone TRUST {
+                screen trust-screen;
+                interfaces {
+                    ge-0/0/1.0;
+                }
+            }
+        }
+        policies {
+            from-zone TRUST to-zone UNTRUST {
+                policy Allow_Outbound {
+                    match {
+                        source-address any;
+                        destination-address any;
+                        application any;
+                    }
+                    then {
+                        permit;
+                        log {
+                            session-init;
+                            session-close;
+                        }
+                    }
+                }
+            }
+            from-zone UNTRUST to-zone TRUST {
+                policy Block_Inbound {
+                    match {
+                        source-address any;
+                        destination-address any;
+                        application any;
+                    }
+                    then {
+                        deny;
+                        log {
+                            session-init;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    snmp {
+        community juniper-public {
+            authorization read-only;
+        }
+        contact "Demo Admin";
+        location "Demo Lab";
+    }
+  
+  "show interfaces": |
+    Physical interface: ge-0/0/0, Enabled, Physical link is Up
+      Interface index: 134, SNMP ifIndex: 506
+      Link-level type: Ethernet, MTU: 1514, LAN-PHY mode, Speed: 1000mbps, BPDU Error: None, Loop Detect PDU Error: None, Ethernet-Switching Error: None, MAC-REWRITE Error: None, Loopback: Disabled, Source filtering: Disabled, Flow control: Enabled, Auto-negotiation: Enabled, Remote fault: Online
+      Device flags   : Present Running
+      Interface flags: SNMP-Traps Internal: 0x4000
+      Link flags     : None
+      CoS queues     : 8 supported, 8 maximum usable queues
+      Current address: 00:00:5e:00:53:01, Hardware address: 00:00:5e:00:53:01
+      Last flapped   : 2023-01-01 12:05:33 UTC (10d 04:25 ago)
+      Input rate     : 425888 bps (548 pps)
+      Output rate    : 294048 bps (468 pps)
+      Active alarms  : None
+      Active defects : None
+      Interface transmit statistics: Disabled
+    
+      Logical interface ge-0/0/0.0 (Index 71) (SNMP ifIndex 507)
+        Flags: SNMP-Traps 0x4000 VLAN-Tag [ 0x8100.0 ]  Encapsulation: ENET2
+        Input packets : 5225486
+        Output packets: 3962467
+        Protocol inet, MTU: 1500
+          Flags: Sendbcast-pkt-to-re, Is-Primary
+          Addresses, Flags: Is-Preferred Is-Primary
+            Destination: 10.0.0/24, Local: 10.0.0.2, Broadcast: 10.0.0.255
+          
+    Physical interface: ge-0/0/1, Enabled, Physical link is Up
+      Interface index: 135, SNMP ifIndex: 508
+      Link-level type: Ethernet, MTU: 1514, LAN-PHY mode, Speed: 1000mbps, BPDU Error: None, Loop Detect PDU Error: None, Ethernet-Switching Error: None, MAC-REWRITE Error: None, Loopback: Disabled, Source filtering: Disabled, Flow control: Enabled, Auto-negotiation: Enabled, Remote fault: Online
+      Device flags   : Present Running
+      Interface flags: SNMP-Traps Internal: 0x4000
+      Link flags     : None
+      CoS queues     : 8 supported, 8 maximum usable queues
+      Current address: 00:00:5e:00:53:02, Hardware address: 00:00:5e:00:53:02
+      Last flapped   : 2023-01-01 12:05:33 UTC (10d 04:25 ago)
+      Input rate     : 732800 bps (952 pps)
+      Output rate    : 864512 bps (874 pps)
+      Active alarms  : None
+      Active defects : None
+      Interface transmit statistics: Disabled
+    
+      Logical interface ge-0/0/1.0 (Index 72) (SNMP ifIndex 509)
+        Flags: SNMP-Traps 0x4000 VLAN-Tag [ 0x8100.0 ]  Encapsulation: ENET2
+        Input packets : 9217346
+        Output packets: 7643982
+        Protocol inet, MTU: 1500
+          Flags: Sendbcast-pkt-to-re, Is-Primary
+          Addresses, Flags: Is-Preferred Is-Primary
+            Destination: 192.168.2/24, Local: 192.168.2.1, Broadcast: 192.168.2.255
+    
+    Physical interface: lo0, Enabled, Physical link is Up
+      Interface index: 6, SNMP ifIndex: 16
+      Type: Loopback, MTU: Unlimited, Clocking: Unspecified, Speed: Unlimited
+      Device flags   : Present Running Loopback
+      Interface flags: SNMP-Traps Internal: 0x4000
+      Link flags     : None
+      Last flapped   : Never
+      Input rate     : 0 bps (0 pps)
+      Output rate    : 0 bps (0 pps)
+    
+      Logical interface lo0.0 (Index 67) (SNMP ifIndex 78)
+        Flags: SNMP-Traps Encapsulation: Unspecified
+        Input packets : 0
+        Output packets: 0
+        Protocol inet, MTU: Unlimited
+          Flags: Sendbcast-pkt-to-re
+          Addresses, Flags: Is-Preferred Is-Primary
+            Local: 2.2.2.2
+  
+  "show chassis hardware": |
+    Hardware inventory:
+    Item             Version  Part number  Serial number     Description
+    Chassis                                AD2019AA0123      SRX300
+    Routing Engine   REV 0x01 650-077895   AD2019AA0123      RE-SRX300
+    FPC 0                                                    FPC
+      PIC 0                                                  10x10M/100M/1G
+    Power Supply 0                                          ACPWR
+    Fan Tray                                                 FAN
+  
+  "show route": |
+    inet.0: 10 destinations, 10 routes (10 active, 0 holddown, 0 hidden)
+    + = Active Route, - = Last Active, * = Both
+    
+    0.0.0.0/0         *[Static/5] 10d 04:25:23
+                        > to 10.0.0.1 via ge-0/0/0.0
+    2.2.2.2/32        *[Direct/0] 10d 04:25:23
+                        > via lo0.0
+    10.0.0.0/24       *[Direct/0] 10d 04:25:23
+                        > via ge-0/0/0.0
+    10.0.0.2/32       *[Local/0] 10d 04:25:23
+                        Local via ge-0/0/0.0
+    192.168.2.0/24    *[Direct/0] 10d 04:25:23
+                        > via ge-0/0/1.0
+    192.168.2.1/32    *[Local/0] 10d 04:25:23
+                        Local via ge-0/0/1.0
+    224.0.0.5/32      *[OSPF/10] 10d 04:25:15, metric 1
+                        MultiRecv
+  
+  "show security zones": |
+    Security zone: UNTRUST
+      Interfaces bound: 1
+      Interfaces:
+        ge-0/0/0.0
+      Screen: untrust-screen
+      Address book entries: Not Defined
+      Applications: Not Defined
+      Policy configurable: Yes
+      Source identity based services: Not Defined
+    
+    Security zone: TRUST
+      Interfaces bound: 1
+      Interfaces:
+        ge-0/0/1.0
+      Screen: trust-screen
+      Address book entries: Not Defined
+      Applications: Not Defined
+      Policy configurable: Yes
+      Source identity based services: Not Defined
+
+panos:
+  "show system info": |
+    hostname: demo-paloalto1
+    ip-address: 10.0.0.3
+    netmask: 255.255.255.0
+    default-gateway: 10.0.0.1
+    model: PA-3020
+    serial: 001201020345
+    sw-version: 10.1.6-h3
+    uptime: 8 days, 16 hours, 32 minutes
+    multi-vsys: off
+    app-version: 8631-7651
+    app-release-date: 2023/01/01 12:05:33
+    av-version: 4394-4686
+    av-release-date: 2023/01/01 12:05:33
+    threat-version: 8631-7651
+    threat-release-date: 2023/01/01 12:05:33
+    wildfire-version: 803549
+    wildfire-release-date: 2023/01/01 12:05:33
+  
+  "show config running": |
+    # Running configuration
+    set deviceconfig system hostname demo-paloalto1
+    set deviceconfig system domain demo.local
+    set deviceconfig system ip-address 10.0.0.3 netmask 255.255.255.0
+    set deviceconfig system default-gateway 10.0.0.1
+    set deviceconfig system dns-setting servers primary 10.0.0.10
+    set deviceconfig system dns-setting servers secondary 10.0.0.11
+    set deviceconfig system ntp-servers primary-ntp-server ntp-server-address 10.0.0.10
+    set deviceconfig system ntp-servers secondary-ntp-server ntp-server-address 10.0.0.11
+    
+    # Network configuration
+    set network interface ethernet ethernet1/1 layer3 ip 10.0.0.3/24
+    set network interface ethernet ethernet1/1 comment "WAN Interface"
+    set network interface ethernet ethernet1/2 layer3 ip 192.168.3.1/24
+    set network interface ethernet ethernet1/2 comment "LAN Interface"
+    set network interface loopback loopback.1 ip 3.3.3.3/32
+    set network interface loopback loopback.1 comment "Loopback Interface"
+    
+    # Virtual router
+    set network virtual-router default interface [ ethernet1/1 ethernet1/2 loopback.1 ]
+    set network virtual-router default routing-table ip static-route default-route destination 0.0.0.0/0 nexthop ip-address 10.0.0.1
+    
+    # Security zones
+    set vsys vsys1 zone untrust network layer3 ethernet1/1
+    set vsys vsys1 zone trust network layer3 ethernet1/2
+    set vsys vsys1 zone management network layer3 loopback.1
+    
+    # Security rules
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" from trust
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" to untrust
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" source any
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" destination any
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" application any
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" service application-default
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" action allow
+    set vsys vsys1 rulebase security rules "Allow Outbound Traffic" log-setting default
+    
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" from untrust
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" to trust
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" source any
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" destination any
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" application any
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" service application-default
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" action deny
+    set vsys vsys1 rulebase security rules "Block Inbound Traffic" log-setting default
+    
+    # NAT rules
+    set vsys vsys1 rulebase nat rules "Outbound NAT" from trust
+    set vsys vsys1 rulebase nat rules "Outbound NAT" to untrust
+    set vsys vsys1 rulebase nat rules "Outbound NAT" source any
+    set vsys vsys1 rulebase nat rules "Outbound NAT" destination any
+    set vsys vsys1 rulebase nat rules "Outbound NAT" service any
+    set vsys vsys1 rulebase nat rules "Outbound NAT" source-translation dynamic-ip-and-port interface-address interface ethernet1/1
+    
+    # Services
+    set vsys vsys1 service ssh protocol tcp port 22
+    set vsys vsys1 service https protocol tcp port 443
+    
+    # SNMP
+    set deviceconfig system snmp-setting access-setting version v2c communities paloalto-public
+    set deviceconfig system snmp-setting system contact "Demo Admin"
+    set deviceconfig system snmp-setting system location "Demo Lab"
+  
+  "show interface all": |
+    ----------------------------------------------------------------------------------------------------------------------
+    Name                   | Zone      | VLAN | IP/Netmask                      | Status    | Flags    | MTU  | MAC Address
+    ----------------------------------------------------------------------------------------------------------------------
+    ethernet1/1            | untrust   |      | 10.0.0.3/24                     | up        | A        | 1500 | 00:1b:17:00:00:01
+    ethernet1/2            | trust     |      | 192.168.3.1/24                  | up        | A        | 1500 | 00:1b:17:00:00:02
+    loopback.1             | management|      | 3.3.3.3/32                      | up        | A        | 1500 | N/A
+    
+    ----------------------------------------------------------------------------------------------------------------------
+    Flags: A - active, L - local, E - external, C - category, U - LLDP/CD
+    
+    Link status: Active/Passive
+  
+  "show routing route": |
+    IPv4 Routing Table
+    ----------------------------------------------------------------------------------------------------------------------
+    S         0.0.0.0/0                  nexthop 10.0.0.1                 ethernet1/1       metric 10
+    C         10.0.0.0/24                                                 ethernet1/1       metric 10
+    C         192.168.3.0/24                                              ethernet1/2       metric 10
+    C         3.3.3.3/32                                                  loopback.1        metric 10
+    
+    Flags: C - connected, S - static, A - aggregate, R - rip, O - ospf, B - bgp, E - ecmp
+  
+  "show zone": |
+    Name          ID          Type        Interfaces                                     
+    ----------------------------------------------------------------------------------------------------------------------
+    untrust       1           layer3      ethernet1/1                                    
+    trust         2           layer3      ethernet1/2                                    
+    management    3           layer3      loopback.1                                     
+  
+  "show security-policy all": |
+    Security Policy Rules:
+    ----------------------------------------------------------------------------------------------------------------------
+    Rule Name                  | Source     | Destination | Service    | Application  | Action      | Profile Setting
+    ----------------------------------------------------------------------------------------------------------------------
+    Allow Outbound Traffic     | trust      | untrust     | app-default| any          | allow       | default
+    Block Inbound Traffic      | untrust    | trust       | app-default| any          | deny        | default
+    ----------------------------------------------------------------------------------------------------------------------
+  
+  "show nat-policy all": |
+    NAT Policy Rules:
+    ----------------------------------------------------------------------------------------------------------------------
+    Rule Name                  | Source     | Destination | Service    | Translation  | Options
+    ----------------------------------------------------------------------------------------------------------------------
+    Outbound NAT               | trust      | untrust     | any        | dynamic-ip-and-port interface ethernet1/1 | -
+    ----------------------------------------------------------------------------------------------------------------------

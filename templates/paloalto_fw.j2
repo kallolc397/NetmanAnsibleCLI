@@ -1,0 +1,215 @@
+{#
+  Palo Alto Firewall Configuration Template
+  This template generates Palo Alto configuration in XML format for API import
+#}
+<config version="9.1.0">
+  <devices>
+    <entry name="localhost.localdomain">
+      <deviceconfig>
+        <system>
+          <hostname>{{ hostname }}</hostname>
+          <domain>{{ domain_name }}</domain>
+          <ip-address>{{ interfaces[0].ip_address | regex_replace('^([^/]+)/.*$', '\\1') }}</ip-address>
+          <netmask>{{ interfaces[0].ip_address | regex_replace('^[^/]+/(.*)$', '\\1') | netmask }}</netmask>
+          <update-server>updates.paloaltonetworks.com</update-server>
+          <update-schedule>
+            <threats>
+              <recurring>
+                <daily>
+                  <at>01:00</at>
+                  <action>download-and-install</action>
+                </daily>
+              </recurring>
+            </threats>
+          </update-schedule>
+          <timezone>UTC</timezone>
+          <service>
+            <disable-telnet>yes</disable-telnet>
+            <disable-http>yes</disable-http>
+          </service>
+          {% if ntp_servers is defined %}
+          <ntp-servers>
+            {% for server in ntp_servers %}
+            <primary-ntp-server>
+              <ntp-server-address>{{ server.address }}</ntp-server-address>
+            </primary-ntp-server>
+            {% endfor %}
+          </ntp-servers>
+          {% endif %}
+          {% if dns_servers is defined %}
+          <dns-setting>
+            <servers>
+              {% for server in dns_servers %}
+              {% if server.primary is defined %}
+              <primary>{{ server.primary }}</primary>
+              {% endif %}
+              {% if server.secondary is defined %}
+              <secondary>{{ server.secondary }}</secondary>
+              {% endif %}
+              {% endfor %}
+            </servers>
+          </dns-setting>
+          {% endif %}
+          {% if snmp is defined %}
+          <snmp-setting>
+            <access-setting>
+              <version>
+                <v2c>
+                  <communities>
+                    <member>{{ snmp.community }}</member>
+                  </communities>
+                </v2c>
+              </version>
+            </access-setting>
+            <system>
+              <contact>{{ snmp.contact }}</contact>
+              <location>{{ snmp.location }}</location>
+            </system>
+          </snmp-setting>
+          {% endif %}
+        </system>
+      </deviceconfig>
+      <network>
+        <interface>
+          {% for interface in interfaces %}
+          <ethernet>
+            <entry name="{{ interface.name | regex_replace('^ethernet', '') }}">
+              <layer3>
+                <ip>
+                  <entry name="{{ interface.ip_address }}"/>
+                </ip>
+              </layer3>
+              <comment>{{ interface.description }}</comment>
+            </entry>
+          </ethernet>
+          {% endfor %}
+          {% for interface in interfaces %}
+          {% if 'loopback' in interface.name %}
+          <loopback>
+            <entry name="{{ interface.name | regex_replace('^loopback\\.', '') }}">
+              <ip>
+                <entry name="{{ interface.ip_address }}"/>
+              </ip>
+              <comment>{{ interface.description }}</comment>
+            </entry>
+          </loopback>
+          {% endif %}
+          {% endfor %}
+        </interface>
+        <virtual-router>
+          {% for vr in virtual_routers %}
+          <entry name="{{ vr.name }}">
+            <interface>
+              {% for intf in vr.interfaces %}
+              <member>{{ intf }}</member>
+              {% endfor %}
+            </interface>
+            <routing-table>
+              <ip>
+                <static-route>
+                  {% for route in vr.static_routes %}
+                  <entry name="{{ route.name }}">
+                    <destination>{{ route.destination }}</destination>
+                    <nexthop>
+                      <ip-address>{{ route.nexthop }}</ip-address>
+                    </nexthop>
+                  </entry>
+                  {% endfor %}
+                </static-route>
+              </ip>
+            </routing-table>
+          </entry>
+          {% endfor %}
+        </virtual-router>
+      </network>
+      <vsys>
+        <entry name="vsys1">
+          <zone>
+            {% for zone in zones %}
+            <entry name="{{ zone.name }}">
+              <network>
+                <layer3>
+                  {% for interface in interfaces %}
+                  {% if interface.zone == zone.name %}
+                  <member>{{ interface.name }}</member>
+                  {% endif %}
+                  {% endfor %}
+                </layer3>
+              </network>
+              <enable-user-identification>{{ zone.enable_user_id | string | lower }}</enable-user-identification>
+            </entry>
+            {% endfor %}
+          </zone>
+          <service>
+            {% for service in services %}
+            <entry name="{{ service.name }}">
+              <protocol>
+                <{{ service.protocol }}>
+                  <port>{{ service.destination_port }}</port>
+                </{{ service.protocol }}>
+              </protocol>
+            </entry>
+            {% endfor %}
+          </service>
+          <rulebase>
+            <security>
+              {% for policy in security_policies %}
+              <rules>
+                <entry name="{{ policy.name }}">
+                  <from>
+                    <member>{{ policy.source_zone }}</member>
+                  </from>
+                  <to>
+                    <member>{{ policy.destination_zone }}</member>
+                  </to>
+                  <source>
+                    <member>{{ policy.source_address }}</member>
+                  </source>
+                  <destination>
+                    <member>{{ policy.destination_address }}</member>
+                  </destination>
+                  <application>
+                    <member>{{ policy.application }}</member>
+                  </application>
+                  <service>
+                    <member>{{ policy.service }}</member>
+                  </service>
+                  <action>{{ policy.action }}</action>
+                  <log-setting>{{ policy.log_setting }}</log-setting>
+                </entry>
+              </rules>
+              {% endfor %}
+            </security>
+            <nat>
+              {% for nat in nat_policies %}
+              <rules>
+                <entry name="{{ nat.name }}">
+                  <from>
+                    <member>{{ nat.source_zone }}</member>
+                  </from>
+                  <to>
+                    <member>{{ nat.destination_zone }}</member>
+                  </to>
+                  <source>
+                    <member>{{ nat.source_address }}</member>
+                  </source>
+                  <destination>
+                    <member>{{ nat.destination_address }}</member>
+                  </destination>
+                  <source-translation>
+                    <dynamic-ip-and-port>
+                      <interface-address>
+                        <interface>{{ nat.source_translation_interface }}</interface>
+                      </interface-address>
+                    </dynamic-ip-and-port>
+                  </source-translation>
+                </entry>
+              </rules>
+              {% endfor %}
+            </nat>
+          </rulebase>
+        </entry>
+      </vsys>
+    </entry>
+  </devices>
+</config>

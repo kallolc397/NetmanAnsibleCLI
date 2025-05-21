@@ -36,5 +36,31 @@
       "fabric_controllers"
     ],
     "apic_url": "https://10.0.0.100"
+  },
+  {
+    "hostname": "demo-juniper1",
+    "ip": "10.0.0.2",
+    "device_type": "junos",
+    "username": "admin",
+    "password": "juniper123",
+    "ssh_port": 22,
+    "groups": [
+      "demo",
+      "firewalls",
+      "juniper"
+    ]
+  },
+  {
+    "hostname": "demo-paloalto1",
+    "ip": "10.0.0.3",
+    "device_type": "panos",
+    "username": "admin",
+    "password": "paloalto123",
+    "ssh_port": 22,
+    "groups": [
+      "demo",
+      "firewalls",
+      "paloalto"
+    ]
   }
 ]

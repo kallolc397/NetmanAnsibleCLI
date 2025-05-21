@@ -64,6 +64,24 @@ def create_demo_inventory():
             "ssh_port": 22,
             "groups": ["demo", "aci", "fabric_controllers"],
             "apic_url": "https://10.0.0.100"
+        },
+        {
+            "hostname": "demo-juniper1",
+            "ip": "10.0.0.2",
+            "device_type": "junos",
+            "username": "admin",
+            "password": "juniper123",
+            "ssh_port": 22,
+            "groups": ["demo", "firewalls", "juniper"]
+        },
+        {
+            "hostname": "demo-paloalto1",
+            "ip": "10.0.0.3",
+            "device_type": "panos",
+            "username": "admin",
+            "password": "paloalto123",
+            "ssh_port": 22,
+            "groups": ["demo", "firewalls", "paloalto"]
         }
     ]
     
@@ -109,6 +127,33 @@ def create_demo_inventory():
                                     'apic_use_proxy': 'no',
                                     'apic_validate_certs': 'no'
                                 }
+                            }
+                        },
+                        'juniper': {
+                            'hosts': {
+                                'demo-juniper1': {
+                                    'ansible_host': '10.0.0.2',
+                                    'ansible_network_os': 'junos',
+                                    'ansible_user': 'admin',
+                                    'ansible_password': 'juniper123',
+                                    'ansible_connection': 'netconf'
+                                }
+                            }
+                        },
+                        'paloalto': {
+                            'hosts': {
+                                'demo-paloalto1': {
+                                    'ansible_host': '10.0.0.3',
+                                    'ansible_network_os': 'panos',
+                                    'ansible_user': 'admin',
+                                    'ansible_password': 'paloalto123'
+                                }
+                            }
+                        },
+                        'firewalls': {
+                            'children': {
+                                'juniper': {},
+                                'paloalto': {}
                             }
                         }
                     }

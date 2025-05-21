@@ -1,0 +1,135 @@
+---
+# Demo variable file for Palo Alto firewall
+
+# Basic device info
+hostname: demo-paloalto1
+domain_name: demo.local
+username: admin
+password: paloalto123
+
+# Interface configuration
+interfaces:
+  - name: ethernet1/1
+    description: "WAN Interface"
+    zone: untrust
+    virtual_router: default
+    vsys: vsys1
+    ip_address: 10.0.0.3/24
+    
+  - name: ethernet1/2
+    description: "LAN Interface"
+    zone: trust
+    virtual_router: default
+    vsys: vsys1
+    ip_address: 192.168.3.1/24
+    
+  - name: loopback.1
+    description: "Loopback Interface"
+    zone: management
+    virtual_router: default
+    vsys: vsys1
+    ip_address: 3.3.3.3/32
+
+# Security zones
+zones:
+  - name: untrust
+    vsys: vsys1
+    enable_user_id: no
+    exclude_acl: no
+  
+  - name: trust
+    vsys: vsys1
+    enable_user_id: yes
+    exclude_acl: no
+  
+  - name: management
+    vsys: vsys1
+    enable_user_id: no
+    exclude_acl: yes
+
+# Virtual routers
+virtual_routers:
+  - name: default
+    vsys: vsys1
+    interfaces:
+      - ethernet1/1
+      - ethernet1/2
+      - loopback.1
+    static_routes:
+      - name: default-route
+        destination: 0.0.0.0/0
+        nexthop_type: ip-address
+        nexthop: 10.0.0.1
+        virtual_router: default
+
+# Security policies
+security_policies:
+  - name: "Allow Outbound Traffic"
+    source_zone: trust
+    destination_zone: untrust
+    source_address: any
+    destination_address: any
+    application: any
+    service: application-default
+    action: allow
+    log_setting: default
+    
+  - name: "Block Inbound Traffic"
+    source_zone: untrust
+    destination_zone: trust
+    source_address: any
+    destination_address: any
+    application: any
+    service: application-default
+    action: deny
+    log_setting: default
+
+# NAT policies
+nat_policies:
+  - name: "Outbound NAT"
+    source_zone: trust
+    destination_zone: untrust
+    source_address: any
+    destination_address: any
+    source_translation_type: dynamic-ip-and-port
+    source_translation_address_type: interface-address
+    source_translation_interface: ethernet1/1
+
+# Log settings
+log_settings:
+  - name: default
+    log_type: traffic
+    filter: all
+    send_to_panorama: yes
+    
+  - name: default
+    log_type: threat
+    filter: all
+    send_to_panorama: yes
+
+# Service configuration
+services:
+  - name: ssh
+    protocol: tcp
+    destination_port: 22
+    
+  - name: https
+    protocol: tcp
+    destination_port: 443
+
+# NTP configuration
+ntp_servers:
+  - address: 10.0.0.10
+    
+  - address: 10.0.0.11
+
+# DNS configuration
+dns_servers:
+  - primary: 10.0.0.10
+  - secondary: 10.0.0.11
+
+# SNMP configuration
+snmp:
+  community: paloalto-public
+  contact: "Demo Admin"
+  location: "Demo Lab"
