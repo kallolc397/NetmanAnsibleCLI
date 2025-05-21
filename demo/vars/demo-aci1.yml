@@ -1,0 +1,126 @@
+---
+# Demo variable file for Cisco ACI APIC controller
+
+# Basic device info
+hostname: demo-aci1
+device_type: cisco_aci
+username: admin
+password: cisco123
+
+# APIC connection info
+apic_url: https://10.0.0.100
+apic_use_proxy: false
+apic_validate_certs: false
+
+# Fabric information
+fabric_name: "Demo-Fabric"
+fabric_id: 1
+
+# Tenant configuration
+tenants:
+  - name: Demo_Tenant
+    description: "Demo Tenant for NetMan"
+    
+    # Application Profiles
+    app_profiles:
+      - name: Demo_App
+        description: "Demo Application Profile"
+        
+        # End Point Groups (EPGs)
+        epgs:
+          - name: Web_EPG
+            description: "Web Tier"
+            bridge_domain: BD_Web
+            preferred_group: false
+            intra_epg_isolation: false
+          - name: App_EPG
+            description: "Application Tier"
+            bridge_domain: BD_App
+            preferred_group: false
+            intra_epg_isolation: false
+          - name: DB_EPG
+            description: "Database Tier"
+            bridge_domain: BD_DB
+            preferred_group: false
+            intra_epg_isolation: true
+    
+    # VRFs (Virtual Routing and Forwarding)
+    vrfs:
+      - name: Demo_VRF
+        description: "Demo Virtual Routing Context"
+        enforce_preferred_group: false
+        policy_control_enforcement: enforced
+    
+    # Bridge Domains
+    bridge_domains:
+      - name: BD_Web
+        description: "Bridge Domain for Web Tier"
+        vrf: Demo_VRF
+        unicast_routing: true
+        arp_flooding: false
+        l2_unknown_unicast: flood
+        subnets:
+          - gateway: 192.168.10.1/24
+            scope: private
+      - name: BD_App
+        description: "Bridge Domain for App Tier"
+        vrf: Demo_VRF
+        unicast_routing: true
+        arp_flooding: false
+        l2_unknown_unicast: flood
+        subnets:
+          - gateway: 192.168.20.1/24
+            scope: private
+      - name: BD_DB
+        description: "Bridge Domain for Database Tier"
+        vrf: Demo_VRF
+        unicast_routing: true
+        arp_flooding: false
+        l2_unknown_unicast: flood
+        subnets:
+          - gateway: 192.168.30.1/24
+            scope: private
+
+# Contracts
+contracts:
+  - name: Web_to_App
+    description: "Web to App traffic"
+    scope: tenant
+    filters:
+      - name: HTTP
+        entries:
+          - name: HTTP
+            protocol: tcp
+            dest_port_from: 80
+            dest_port_to: 80
+      - name: HTTPS
+            entries:
+          - name: HTTPS
+            protocol: tcp
+            dest_port_from: 443
+            dest_port_to: 443
+  - name: App_to_DB
+    description: "App to Database traffic"
+    scope: tenant
+    filters:
+      - name: SQL
+        entries:
+          - name: SQL
+            protocol: tcp
+            dest_port_from: 1433
+            dest_port_to: 1433
+      - name: MySQL
+        entries:
+          - name: MySQL
+            protocol: tcp
+            dest_port_from: 3306
+            dest_port_to: 3306
+
+# Contract applications
+contract_applications:
+  - consumer: Web_EPG
+    provider: App_EPG
+    contract: Web_to_App
+  - consumer: App_EPG
+    provider: DB_EPG
+    contract: App_to_DB

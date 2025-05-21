@@ -2,6 +2,16 @@ all:
   children:
     network:
       children:
+        aci:
+          hosts:
+            demo-aci1:
+              ansible_host: 10.0.0.100
+              ansible_network_os: aci
+              ansible_password: cisco123
+              ansible_user: admin
+              apic_host: 10.0.0.100
+              apic_use_proxy: 'no'
+              apic_validate_certs: 'no'
         routers:
           hosts:
             demo-router1:

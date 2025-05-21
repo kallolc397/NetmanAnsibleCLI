@@ -1,0 +1,224 @@
+---
+# Cisco ACI simulation responses for NetMan demo
+
+cisco_aci:
+  "show version": |
+    Cisco Application Policy Infrastructure Controller 
+    Hardware Version: APIC-SERVER-L2 
+    Software Version: apic-5.2(1g) 
+      
+    Build: 5.2(1g)
+      
+    API version: 5.2(1g)
+    UUID: f6fe7a3a-5d18-4cd9-975c-a58f34191850
+    Serial: FCH1234V5TY
+    Model: APIC-SERVER-L2
+
+    System uptime:   9 days, 3 hours, 42 minutes, 58 seconds
+
+    Last Reboot Reason: unknown
+  
+  "acidiag verifyapic": |
+    PASS: Local APIC connectivity verified
+    PASS: All APICs connected to fabric
+    PASS: CIMC inventory verified
+    PASS: APIC cluster is stable
+    PASS: Fabric inventory verified
+    PASS: Fabric-wide connectivity verified
+    PASS: All fabric nodes operational
+  
+  "moquery -c firmwareCtrlrRunning": |
+    Total Objects shown: 1
+
+    # firmware.CtrlrRunning
+    type         : firmware.CtrlrRunning
+    childAction  : 
+    descr        :
+    dn           : topology/pod-1/node-1/sys/ctrlrfwstatuscont/ctrlrrunning
+    instanceId   : 0
+    modTs        : 2023-01-01T12:05:33.359+00:00
+    rn           : ctrlrrunning
+    status       : 
+    ts           : 2023-01-01T12:05:33.359+00:00
+    version      : 5.2(1g)
+  
+  "moquery -c fvTenant": |
+    Total Objects shown: 2
+
+    # fv.Tenant
+    name         : common
+    descr        : 
+    dn           : uni/tn-common
+    instanceId   : 0
+    status       :
+
+    # fv.Tenant
+    name         : Demo_Tenant
+    descr        : Demo Tenant for NetMan
+    dn           : uni/tn-Demo_Tenant
+    instanceId   : 0
+    status       :
+  
+  "moquery -c fvCtx": |
+    Total Objects shown: 2
+
+    # fv.Ctx
+    name         : default
+    descr        : 
+    dn           : uni/tn-common/ctx-default
+    instanceId   : 0
+    status       :
+
+    # fv.Ctx
+    name         : Demo_VRF
+    descr        : Demo Virtual Routing Context
+    dn           : uni/tn-Demo_Tenant/ctx-Demo_VRF
+    instanceId   : 0
+    status       :
+  
+  "moquery -c fvBD": |
+    Total Objects shown: 3
+
+    # fv.BD
+    name         : BD_Web
+    descr        : Bridge Domain for Web Tier
+    dn           : uni/tn-Demo_Tenant/BD-BD_Web
+    instanceId   : 0
+    status       :
+
+    # fv.BD
+    name         : BD_App
+    descr        : Bridge Domain for App Tier
+    dn           : uni/tn-Demo_Tenant/BD-BD_App
+    instanceId   : 0
+    status       :
+
+    # fv.BD
+    name         : BD_DB
+    descr        : Bridge Domain for Database Tier
+    dn           : uni/tn-Demo_Tenant/BD-BD_DB
+    instanceId   : 0
+    status       :
+  
+  "moquery -c fvAp": |
+    Total Objects shown: 1
+
+    # fv.Ap
+    name         : Demo_App
+    descr        : Demo Application Profile
+    dn           : uni/tn-Demo_Tenant/ap-Demo_App
+    instanceId   : 0
+    status       :
+  
+  "moquery -c fvAEPg": |
+    Total Objects shown: 3
+
+    # fv.AEPg
+    name         : Web_EPG
+    descr        : Web Tier
+    dn           : uni/tn-Demo_Tenant/ap-Demo_App/epg-Web_EPG
+    instanceId   : 0
+    status       :
+
+    # fv.AEPg
+    name         : App_EPG
+    descr        : Application Tier
+    dn           : uni/tn-Demo_Tenant/ap-Demo_App/epg-App_EPG
+    instanceId   : 0
+    status       :
+
+    # fv.AEPg
+    name         : DB_EPG
+    descr        : Database Tier
+    dn           : uni/tn-Demo_Tenant/ap-Demo_App/epg-DB_EPG
+    instanceId   : 0
+    status       :
+  
+  "show controller": |
+    ID       Pod ID   Name                     IP Address          Role        State
+    ========= ======= ======================== ================ ============ ==========
+    1         1       demo-aci1                10.0.0.100       controller  fully-fit
+  
+  "show fabric health": |
+    Pod  Node  Health Score  Status  Considerations
+    ===  ====  ============  ======  =============
+    1    1     100           great   0
+         2     100           great   0
+         3     100           great   0
+         4     100           great   0
+  
+  "show running-config": |
+    # ACI doesn't have a traditional 'running-config' like IOS devices
+    # This is a simulated response showing Tenant info
+    
+    # Tenant: Demo_Tenant
+    tenant Demo_Tenant
+      description "Demo Tenant for NetMan"
+      
+      # VRF
+      vrf Demo_VRF
+        description "Demo Virtual Routing Context"
+      exit
+      
+      # Bridge Domains
+      bridge-domain BD_Web
+        description "Bridge Domain for Web Tier"
+        vrf Demo_VRF
+        l3out Enabled
+        subnet 192.168.10.1/24 scope private
+      exit
+      
+      bridge-domain BD_App
+        description "Bridge Domain for App Tier"
+        vrf Demo_VRF
+        l3out Enabled
+        subnet 192.168.20.1/24 scope private
+      exit
+      
+      bridge-domain BD_DB
+        description "Bridge Domain for Database Tier"
+        vrf Demo_VRF
+        l3out Enabled
+        subnet 192.168.30.1/24 scope private
+      exit
+      
+      # Application Profile
+      app-profile Demo_App
+        description "Demo Application Profile"
+        
+        # EPGs
+        epg Web_EPG
+          description "Web Tier"
+          bridge-domain BD_Web
+        exit
+        
+        epg App_EPG
+          description "Application Tier"
+          bridge-domain BD_App
+        exit
+        
+        epg DB_EPG
+          description "Database Tier"
+          bridge-domain BD_DB
+        exit
+      exit
+    exit
+    
+    # Contracts
+    contract Web_to_App
+      description "Web to App traffic"
+      scope tenant
+      subject Web_to_App
+        filter HTTP
+        filter HTTPS
+      exit
+    exit
+    
+    contract App_to_DB
+      description "App to Database traffic"
+      scope tenant
+      subject App_to_DB
+        filter SQL
+        filter MySQL
+      exit
+    exit

@@ -54,6 +54,16 @@ def create_demo_inventory():
             "password": "admin123",
             "ssh_port": 22,
             "groups": ["demo", "switches"]
+        },
+        {
+            "hostname": "demo-aci1",
+            "ip": "10.0.0.100",
+            "device_type": "cisco_aci",
+            "username": "admin",
+            "password": "cisco123",
+            "ssh_port": 22,
+            "groups": ["demo", "aci", "fabric_controllers"],
+            "apic_url": "https://10.0.0.100"
         }
     ]
     
@@ -87,6 +97,19 @@ def create_demo_inventory():
                                     'ansible_password': 'admin123'
                                 }
                             }
+                        },
+                        'aci': {
+                            'hosts': {
+                                'demo-aci1': {
+                                    'ansible_host': '10.0.0.100',
+                                    'ansible_network_os': 'aci',
+                                    'ansible_user': 'admin',
+                                    'ansible_password': 'cisco123',
+                                    'apic_host': '10.0.0.100',
+                                    'apic_use_proxy': 'no',
+                                    'apic_validate_certs': 'no'
+                                }
+                            }
                         }
                     }
                 }
@@ -101,7 +124,11 @@ def create_demo_inventory():
 
 def create_demo_simulations():
     """Create simulation responses for demo devices."""
+    # Load existing simulations for Cisco IOS and other devices
     simulations_file = 'demo/simulations/default_responses.yml'
+    
+    # Now add Cisco ACI responses
+    aci_simulations_file = 'demo/simulations/cisco_aci_responses.yml'
     
     # Basic simulation responses
     simulations = {
