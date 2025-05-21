@@ -1,0 +1,50 @@
+---
+# Demo variable file for demo-switch1
+
+# Basic device info
+hostname: demo-switch1
+domain_name: demo.local
+enable_secret: demo-enable
+username: admin
+password: admin123
+
+# Interface configuration
+interfaces:
+  - name: GigabitEthernet0/0
+    description: Uplink Interface
+    ip: 192.168.1.2
+    netmask: 255.255.255.0
+    shutdown: false
+  - name: GigabitEthernet0/1
+    description: Access Port VLAN 10
+    shutdown: false
+  - name: GigabitEthernet0/2
+    description: Access Port VLAN 20
+    shutdown: false
+  - name: GigabitEthernet0/3
+    description: Access Port VLAN 30
+    shutdown: false
+
+# VLAN configuration
+vlans:
+  - id: 10
+    name: Data
+  - id: 20
+    name: Voice
+  - id: 30
+    name: Management
+
+# Services configuration
+ntp_servers:
+  - 10.0.0.10
+syslog_servers:
+  - 10.0.0.20
+logging_source_interface: GigabitEthernet0/0
+snmp_community: demopublic
+snmp_contact: Demo Admin
+snmp_location: Demo Network Closet
+
+# Security banner
+banner: |
+  Welcome to NetMan Demo Switch!
+  Authorized access only.

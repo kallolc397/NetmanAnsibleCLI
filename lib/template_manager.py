@@ -6,6 +6,7 @@ This module handles Jinja2 templates for network device configurations.
 import os
 import yaml
 import json
+import datetime
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -24,6 +25,9 @@ class TemplateManager:
             trim_blocks=True,
             lstrip_blocks=True
         )
+        
+        # Add functions to the Jinja2 environment
+        self.env.globals['now'] = lambda: datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     def _ensure_dir_exists(self):
         """Ensure templates directory exists."""

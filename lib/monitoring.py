@@ -5,13 +5,27 @@ This module handles device status monitoring and fact gathering.
 """
 import time
 import subprocess
+import os
+import platform
 from .ansible_runner import AnsibleRunner
+
+# Import the simulator for demo mode
+try:
+    from .simulator import DeviceSimulator
+except ImportError:
+    DeviceSimulator = None
+
+# Check if we're in demo mode
+DEMO_MODE = os.environ.get('NETMAN_DEMO_MODE', 'false').lower() in ('true', '1', 'yes')
 
 class Monitor:
     """Monitors network devices."""
     
-    @staticmethod
-    def check_device_status(device_info):
+    # Initialize simulator if in demo mode
+    _simulator = DeviceSimulator() if DEMO_MODE and DeviceSimulator else None
+    
+    @classmethod
+    def check_device_status(cls, device_info):
         """
         Check if a device is reachable.
         
@@ -21,12 +35,16 @@ class Monitor:
         Returns:
             tuple: (status_bool, response_time_ms)
         """
+        # Use simulator in demo mode
+        if DEMO_MODE and cls._simulator:
+            return cls._simulator.simulate_connection(device_info)
+            
         try:
             ip = device_info['ip']
             
             # Run ping command to check if device is reachable
             start_time = time.time()
-            ping_count = '-n' if subprocess.os.name == 'nt' else '-c'
+            ping_count = '-n' if platform.system() == 'Windows' else '-c'
             ping_process = subprocess.run(
                 ['ping', ping_count, '1', ip],
                 stdout=subprocess.PIPE,
@@ -43,8 +61,8 @@ class Monitor:
             print(f"Error checking device status: {str(e)}")
             return False, 0
     
-    @staticmethod
-    def get_device_facts(device_info):
+    @classmethod
+    def get_device_facts(cls, device_info):
         """
         Get facts about a network device using Ansible.
         
@@ -54,6 +72,29 @@ class Monitor:
         Returns:
             dict: Device facts or None if failed
         """
+        # Use simulator in demo mode
+        if DEMO_MODE and cls._simulator:
+            # Simulate device facts using show version output
+            device_type = device_info.get('device_type', 'cisco_ios')
+            version_output = cls._simulator.get_response(device_type, 'show version')
+            clock_output = cls._simulator.get_response(device_type, 'show clock')
+            
+            # Create a simulated facts dictionary
+            return {
+                'hostname': device_info.get('hostname', 'unknown'),
+                'version': version_output.split('\n')[0] if version_output else 'Unknown',
+                'uptime': version_output.split('uptime is ')[1].split('\n')[0] if 'uptime is ' in version_output else 'Unknown',
+                'serial': f"SIM{device_info.get('hostname', 'UNKNOWN')[:3]}12345",
+                'model': f"SIM-{device_info.get('device_type', 'GENERIC').upper()}",
+                'interfaces': [
+                    'GigabitEthernet0/0', 
+                    'GigabitEthernet0/1', 
+                    'GigabitEthernet0/2', 
+                    'Loopback0'
+                ],
+                'time': clock_output
+            }
+        
         try:
             ansible_runner = AnsibleRunner()
             
@@ -71,8 +112,8 @@ class Monitor:
             print(f"Error getting device facts: {str(e)}")
             return None
     
-    @staticmethod
-    def monitor_interfaces(device_info):
+    @classmethod
+    def monitor_interfaces(cls, device_info):
         """
         Monitor network interfaces on a device.
         
@@ -82,6 +123,16 @@ class Monitor:
         Returns:
             dict: Interface status information or None if failed
         """
+        # Use simulator in demo mode
+        if DEMO_MODE and cls._simulator:
+            device_type = device_info.get('device_type', 'cisco_ios')
+            interfaces_output = cls._simulator.get_response(device_type, 'show interfaces')
+            
+            return {
+                'raw_output': interfaces_output,
+                'parsed': parse_interface_output(interfaces_output, device_type)
+            }
+            
         try:
             ansible_runner = AnsibleRunner()
             

@@ -1,0 +1,55 @@
+---
+# Demo playbook to test basic connectivity to network devices
+# Usage: ansible-playbook -i data/ansible_inventory.yml playbooks/demo_connectivity.yml -e "target_host=device_name"
+
+- name: Test Device Connectivity
+  hosts: "{{ target_host | default('all') }}"
+  gather_facts: no
+  
+  tasks:
+    - name: Ping test
+      ping:
+      register: ping_result
+      
+    - name: Show ping results
+      debug:
+        var: ping_result
+        
+    - name: Get basic device info (Cisco IOS)
+      ios_command:
+        commands:
+          - show version | include Version
+          - show clock
+      register: device_info
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+      ignore_errors: yes
+      
+    - name: Get basic device info (Juniper)
+      junos_command:
+        commands:
+          - show version | display xml
+          - show system uptime | display xml
+      register: device_info
+      when: ansible_network_os == 'junos'
+      ignore_errors: yes
+      
+    - name: Get basic device info (Arista EOS)
+      eos_command:
+        commands:
+          - show version
+          - show clock
+      register: device_info
+      when: ansible_network_os == 'eos' or ansible_network_os == 'arista_eos'
+      ignore_errors: yes
+      
+    - name: Display device information
+      debug:
+        var: device_info.stdout_lines
+      when: device_info.stdout_lines is defined
+      
+    - name: Set result
+      set_fact:
+        ansible_result:
+          success: "{{ ping_result is success }}"
+          ping_status: "{{ ping_result }}"
+          device_info: "{{ device_info.stdout_lines | default([]) }}"

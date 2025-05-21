@@ -1,0 +1,50 @@
+---
+# Demo variable file for demo-router1
+
+# Basic device info
+hostname: demo-router1
+domain_name: demo.local
+enable_secret: demo-enable
+username: admin
+password: admin123
+
+# Interface configuration
+interfaces:
+  - name: GigabitEthernet0/0
+    description: WAN Interface
+    ip: 10.0.0.1
+    netmask: 255.255.255.0
+    shutdown: false
+  - name: GigabitEthernet0/1
+    description: LAN Interface
+    ip: 192.168.1.1
+    netmask: 255.255.255.0
+    shutdown: false
+
+# Routing configuration
+routing: true
+ospf:
+  process_id: 1
+  networks:
+    - address: 10.0.0.0
+      wildcard: 0.0.0.255
+      area: 0
+    - address: 192.168.1.0
+      wildcard: 0.0.0.255
+      area: 0
+
+# Services configuration
+ntp_servers:
+  - 10.0.0.10
+  - 10.0.0.11
+syslog_servers:
+  - 10.0.0.20
+logging_source_interface: GigabitEthernet0/0
+snmp_community: demopublic
+snmp_contact: Demo Admin
+snmp_location: Demo Lab
+
+# Security banner
+banner: |
+  Welcome to NetMan Demo Router!
+  Authorized access only.
