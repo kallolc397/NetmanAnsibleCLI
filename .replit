@@ -1,0 +1,41 @@
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["libyaml"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Network Manager CLI"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "netman-test"
+
+[[workflows.workflow]]
+name = "Network Manager CLI"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install click rich jinja2 pyyaml gitpython ansible && python netman.py"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "netman-test"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python netman.py --help"
+
+[deployment]
+run = ["sh", "-c", "pip install click rich jinja2 pyyaml gitpython ansible && python netman.py"]

@@ -1,0 +1,58 @@
+---
+# Ansible playbook to get device status and facts
+# Usage: ansible-playbook -i inventory.yml get_device_status.yml -e "target_host=device_name"
+
+- name: Get Device Status and Facts
+  hosts: "{{ target_host }}"
+  gather_facts: no
+  
+  tasks:
+    - name: Get facts from device (Cisco IOS)
+      ios_facts:
+        gather_subset: all
+      register: device_facts
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Get facts from device (Juniper)
+      junos_facts:
+        gather_subset: all
+      register: device_facts
+      when: ansible_network_os == 'junos'
+    
+    - name: Get facts from device (Arista EOS)
+      eos_facts:
+        gather_subset: all
+      register: device_facts
+      when: ansible_network_os == 'eos' or ansible_network_os == 'arista_eos'
+    
+    - name: Get device uptime (Cisco IOS)
+      ios_command:
+        commands:
+          - show version | include uptime
+          - show environment
+          - show interfaces status
+      register: device_status
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Get interface status (Cisco IOS)
+      ios_command:
+        commands:
+          - show interfaces
+          - show ip interface brief
+      register: interface_status
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Compile device status information
+      set_fact:
+        device_info:
+          facts: "{{ device_facts.ansible_facts|default({}) }}"
+          status: "{{ device_status.stdout|default([]) }}"
+          interfaces: "{{ interface_status.stdout|default([]) }}"
+    
+    - name: Set result
+      set_fact:
+        ansible_result:
+          success: true
+          facts: "{{ device_info.facts }}"
+          status: "{{ device_info.status }}"
+          interfaces: "{{ device_info.interfaces }}"

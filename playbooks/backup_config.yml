@@ -1,0 +1,57 @@
+---
+# Ansible playbook to backup device configuration
+# Usage: ansible-playbook -i inventory.yml backup_config.yml -e "target_host=device_name backup_file=path_to_backup.cfg"
+
+- name: Backup Device Configuration
+  hosts: "{{ target_host }}"
+  gather_facts: no
+  
+  vars:
+    backup_file: "{{ backup_file }}"
+    
+  tasks:
+    - name: Validate inputs
+      fail:
+        msg: "Missing required parameter: backup_file"
+      when: backup_file is not defined
+      delegate_to: localhost
+      run_once: true
+      
+    - name: Ensure backup directory exists
+      file:
+        path: "{{ backup_file | dirname }}"
+        state: directory
+      delegate_to: localhost
+    
+    - name: Backup configuration (Cisco IOS)
+      ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ backup_file | basename }}"
+          dir_path: "{{ backup_file | dirname }}"
+      register: backup_result
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Backup configuration (Juniper)
+      junos_config:
+        backup: yes
+        backup_options:
+          filename: "{{ backup_file | basename }}"
+          dir_path: "{{ backup_file | dirname }}"
+      register: backup_result
+      when: ansible_network_os == 'junos'
+    
+    - name: Backup configuration (Arista EOS)
+      eos_config:
+        backup: yes
+        backup_options:
+          filename: "{{ backup_file | basename }}"
+          dir_path: "{{ backup_file | dirname }}"
+      register: backup_result
+      when: ansible_network_os == 'eos' or ansible_network_os == 'arista_eos'
+    
+    - name: Set result
+      set_fact:
+        ansible_result:
+          success: true
+          backup_file: "{{ backup_result.backup_path|default(backup_file) }}"

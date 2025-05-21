@@ -1,0 +1,29 @@
+---
+# NetMan - Network Device Management Tool configuration
+
+# General settings
+general:
+  log_level: INFO
+  log_file: logs/netman.log
+  
+# Default device credentials
+# These are fallback values if not specified when adding a device
+defaults:
+  ssh_port: 22
+  device_type: cisco_ios
+  
+# Git configuration for change tracking
+git:
+  user_name: NetMan
+  user_email: netman@example.com
+  auto_commit: true
+  
+# Ansible settings
+ansible:
+  timeout: 30
+  connection: network_cli
+  
+# Monitoring settings
+monitoring:
+  check_interval: 300  # seconds
+  alert_on_failure: true

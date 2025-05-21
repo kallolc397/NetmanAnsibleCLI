@@ -1,0 +1,83 @@
+---
+# Ansible playbook to configure a network device
+# Usage: ansible-playbook -i inventory.yml configure_device.yml -e "target_host=device_name config_file=path_to_config.txt"
+
+- name: Configure Network Device
+  hosts: "{{ target_host }}"
+  gather_facts: no
+  
+  vars:
+    config_file: "{{ config_file }}"
+  
+  tasks:
+    - name: Validate inputs
+      fail:
+        msg: "Missing required parameter: config_file"
+      when: config_file is not defined
+      delegate_to: localhost
+      run_once: true
+    
+    - name: Check if config file exists
+      stat:
+        path: "{{ config_file }}"
+      register: config_stat
+      delegate_to: localhost
+      
+    - name: Fail if config file doesn't exist
+      fail:
+        msg: "Config file {{ config_file }} not found"
+      when: not config_stat.stat.exists
+      delegate_to: localhost
+    
+    - name: Read configuration file
+      slurp:
+        src: "{{ config_file }}"
+      register: config_content
+      delegate_to: localhost
+    
+    - name: Get device facts before configuration
+      ios_facts:
+        gather_subset: all
+      register: pre_facts
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Configure device (Cisco IOS)
+      ios_config:
+        src: "{{ config_file }}"
+        save_when: modified
+      register: config_result
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Configure device (Juniper)
+      junos_config:
+        src: "{{ config_file }}"
+        format: text
+        comment: "Configured by NetMan"
+        confirm: 5
+      register: config_result
+      when: ansible_network_os == 'junos'
+    
+    - name: Configure device (Arista EOS)
+      eos_config:
+        src: "{{ config_file }}"
+        save_when: modified
+      register: config_result
+      when: ansible_network_os == 'eos' or ansible_network_os == 'arista_eos'
+    
+    - name: Get device facts after configuration
+      ios_facts:
+        gather_subset: all
+      register: post_facts
+      when: ansible_network_os == 'ios' or ansible_network_os == 'cisco_ios'
+    
+    - name: Configuration Summary
+      debug:
+        msg: "Configuration applied successfully with {{ config_result.changed|default(0) }} changes"
+      when: config_result is defined and config_result.changed|default(false)
+    
+    - name: Set result
+      set_fact:
+        ansible_result:
+          success: true
+          changes: "{{ config_result.changed|default(false) }}"
+          diff: "{{ config_result.diff|default({}) }}"
