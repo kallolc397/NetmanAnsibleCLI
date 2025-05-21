@@ -36,6 +36,11 @@ class GitManager:
         """
         try:
             path = path or self.repo_path
+            
+            # Ensure the directory exists
+            os.makedirs(path, exist_ok=True)
+            
+            # Initialize the repository
             repo = git.Repo.init(path)
             
             # Create .gitignore file if it doesn't exist
@@ -48,9 +53,20 @@ class GitManager:
             
             # Create an initial commit if the repo is empty
             if not repo.heads:
-                gitignore_file = os.path.join(path, '.gitignore')
-                repo.git.add(gitignore_file)
-                repo.git.commit('-m', 'Initial commit')
+                try:
+                    # Configure git user if not already configured
+                    try:
+                        repo.git.config('user.name', 'NetMan')
+                        repo.git.config('user.email', 'netman@example.com')
+                    except:
+                        pass  # Continue even if config fails
+                        
+                    # Add and commit the .gitignore file
+                    repo.git.add(gitignore_path)
+                    repo.git.commit('-m', 'Initial commit')
+                except Exception as commit_error:
+                    print(f"Warning: Could not create initial commit: {str(commit_error)}")
+                    # This is not critical, we can continue without the initial commit
             
             return True
         except Exception as e:
