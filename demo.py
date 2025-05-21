@@ -63,6 +63,33 @@ def setup_demo():
                 "password": "demo123",
                 "ssh_port": 22,
                 "groups": ["demo", "switches"]
+            },
+            {
+                "hostname": "demo-aci1",
+                "ip": "10.0.0.100",
+                "device_type": "cisco_aci",
+                "username": "admin",
+                "password": "cisco123",
+                "ssh_port": 22,
+                "groups": ["demo", "aci", "fabric_controllers"]
+            },
+            {
+                "hostname": "demo-juniper1",
+                "ip": "10.0.0.2",
+                "device_type": "junos",
+                "username": "admin",
+                "password": "juniper123",
+                "ssh_port": 22,
+                "groups": ["demo", "firewalls", "juniper"]
+            },
+            {
+                "hostname": "demo-paloalto1",
+                "ip": "10.0.0.3",
+                "device_type": "panos",
+                "username": "admin",
+                "password": "paloalto123",
+                "ssh_port": 22,
+                "groups": ["demo", "firewalls", "paloalto"]
             }
         ]
         
@@ -112,21 +139,33 @@ def show_demo_menu():
     print("\nAvailable demo commands:")
     print("\n1.  Inventory Management:")
     print("    1a. List all devices")
-    print("    1b. Add a demo device")
-    print("    1c. Remove a demo device")
+    print("    1b. List devices by group (routers, switches, firewalls, etc.)")
+    print("    1c. Add a demo device")
+    print("    1d. Remove a demo device")
     
     print("\n2.  Configuration Management:")
-    print("    2a. Push configuration (dry run)")
-    print("    2b. Backup configuration")
-    print("    2c. Compare configurations")
+    print("    2a. Push configuration to Cisco IOS device (dry run)")
+    print("    2b. Push configuration to Cisco ACI (dry run)")
+    print("    2c. Push configuration to Juniper device (dry run)")
+    print("    2d. Push configuration to Palo Alto device (dry run)")
+    print("    2e. Backup configuration")
+    print("    2f. Compare configurations")
     
     print("\n3.  Monitoring:")
-    print("    3a. Check device status")
-    print("    3b. Get device facts")
+    print("    3a. Check status of all devices")
+    print("    3b. Check status of device by type")
+    print("    3c. Get device facts (all vendors)")
     
     print("\n4.  Template Management:")
     print("    4a. List available templates")
-    print("    4b. Show template content")
+    print("    4b. Show Cisco IOS template")
+    print("    4c. Show Cisco ACI template")
+    print("    4d. Show Juniper SRX template")
+    print("    4e. Show Palo Alto template")
+    
+    print("\n5.  Multi-Vendor Tests:")
+    print("    5a. Run all vendors test")
+    print("    5b. Run firewall devices test")
     
     print("\n0.  Exit Demo")
     
@@ -138,39 +177,97 @@ def handle_menu_choice(choice):
     if choice == '1a':
         run_demo_command(['inventory', 'list'])
     elif choice == '1b':
+        group = input("Enter device group (routers, switches, firewalls, aci, juniper, paloalto): ")
+        run_demo_command(['inventory', 'list', '--group', group])
+    elif choice == '1c':
         hostname = input("Enter device hostname: ")
         ip = input("Enter device IP: ")
-        device_type = input("Enter device type [cisco_ios]: ") or "cisco_ios"
+        device_type = input("Enter device type [cisco_ios, cisco_aci, junos, panos]: ") or "cisco_ios"
+        username = input("Enter username [admin]: ") or "admin"
+        password = input("Enter password [demo123]: ") or "demo123"
+        groups = input("Enter groups (comma-separated) [demo]: ") or "demo"
         run_demo_command(['inventory', 'add', hostname, '--ip', ip, '--device-type', device_type, 
-                          '--username', 'demo', '--password', 'demo123', '--groups', 'demo'])
-    elif choice == '1c':
+                          '--username', username, '--password', password, '--groups', groups])
+    elif choice == '1d':
         hostname = input("Enter device hostname to remove: ")
         run_demo_command(['inventory', 'remove', hostname, '--force'])
+    
+    # Configuration management
     elif choice == '2a':
-        hostname = input("Enter device hostname: ")
-        template = input("Enter template name [cisco_base]: ") or "cisco_base"
-        vars_file = input("Enter variables file path [demo/vars/demo-router1.yml]: ") or "demo/vars/demo-router1.yml"
-        run_demo_command(['config', 'push', hostname, '--template', template, '--vars', vars_file, '--dry-run'])
+        run_demo_command(['config', 'push', 'demo-router1', '--template', 'cisco_base', 
+                          '--vars', 'demo/vars/demo-router1.yml', '--dry-run'])
     elif choice == '2b':
-        hostname = input("Enter device hostname: ")
-        run_demo_command(['config', 'backup', hostname])
+        run_demo_command(['config', 'push', 'demo-aci1', '--template', 'cisco_aci', 
+                          '--vars', 'demo/vars/demo-aci1.yml', '--dry-run'])
     elif choice == '2c':
-        hostname = input("Enter device hostname: ")
-        run_demo_command(['config', 'diff', hostname])
-    elif choice == '3a':
+        run_demo_command(['config', 'push', 'demo-juniper1', '--template', 'juniper_srx', 
+                          '--vars', 'demo/vars/demo-juniper1.yml', '--dry-run'])
+    elif choice == '2d':
+        run_demo_command(['config', 'push', 'demo-paloalto1', '--template', 'paloalto_fw', 
+                          '--vars', 'demo/vars/demo-paloalto1.yml', '--dry-run'])
+    elif choice == '2e':
         hostname = input("Enter device hostname (or 'all' for all devices): ")
         if hostname.lower() == 'all':
-            run_demo_command(['monitor', 'status', '--all'])
+            run_demo_command(['config', 'backup', '--all'])
         else:
-            run_demo_command(['monitor', 'status', hostname])
-    elif choice == '3b':
+            run_demo_command(['config', 'backup', hostname])
+    elif choice == '2f':
         hostname = input("Enter device hostname: ")
-        run_demo_command(['monitor', 'facts', hostname])
+        run_demo_command(['config', 'diff', hostname])
+    
+    # Monitoring
+    elif choice == '3a':
+        run_demo_command(['monitor', 'status', '--all'])
+    elif choice == '3b':
+        device_type = input("Enter device type (cisco_ios, cisco_aci, junos, panos): ")
+        devices = {
+            'cisco_ios': ['demo-router1', 'demo-switch1'],
+            'cisco_aci': ['demo-aci1'],
+            'junos': ['demo-juniper1'],
+            'panos': ['demo-paloalto1']
+        }
+        if device_type in devices:
+            for device in devices[device_type]:
+                run_demo_command(['monitor', 'status', device])
+        else:
+            print(f"Invalid device type: {device_type}")
+    elif choice == '3c':
+        vendor = input("Enter vendor (cisco, juniper, paloalto, all): ")
+        if vendor == 'cisco':
+            run_demo_command(['monitor', 'facts', 'demo-router1'])
+            run_demo_command(['monitor', 'facts', 'demo-aci1'])
+        elif vendor == 'juniper':
+            run_demo_command(['monitor', 'facts', 'demo-juniper1'])
+        elif vendor == 'paloalto':
+            run_demo_command(['monitor', 'facts', 'demo-paloalto1'])
+        elif vendor == 'all':
+            run_demo_command(['monitor', 'facts', 'demo-router1'])
+            run_demo_command(['monitor', 'facts', 'demo-aci1'])
+            run_demo_command(['monitor', 'facts', 'demo-juniper1'])
+            run_demo_command(['monitor', 'facts', 'demo-paloalto1'])
+        else:
+            print(f"Invalid vendor: {vendor}")
+    
+    # Template management
     elif choice == '4a':
         run_demo_command(['template', 'list'])
     elif choice == '4b':
-        template = input("Enter template name [cisco_base]: ") or "cisco_base"
-        run_demo_command(['template', 'show', template])
+        run_demo_command(['template', 'show', 'cisco_base'])
+    elif choice == '4c':
+        run_demo_command(['template', 'show', 'cisco_aci'])
+    elif choice == '4d':
+        run_demo_command(['template', 'show', 'juniper_srx'])
+    elif choice == '4e':
+        run_demo_command(['template', 'show', 'paloalto_fw'])
+        
+    # Multi-vendor tests
+    elif choice == '5a':
+        print("\nRunning all vendors test...")
+        subprocess.run(['python', 'test_all_vendors.py'], env={'NETMAN_DEMO_MODE': 'true'})
+    elif choice == '5b':
+        print("\nRunning firewall devices test...")
+        subprocess.run(['python', 'test_firewall_devices.py'], env={'NETMAN_DEMO_MODE': 'true'})
+    
     elif choice == '0':
         print("Exiting NetMan demo.")
         return False

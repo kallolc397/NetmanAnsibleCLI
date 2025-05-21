@@ -240,21 +240,62 @@ Free memory: 5337688 kB"""
         Returns:
             str: Simulated command output
         """
+        # Normalize device type to check available simulations
+        normalized_type = device_type.lower()
+        
+        # Map device types to their simulation keys
+        device_type_map = {
+            'cisco_ios': 'cisco_ios',
+            'ios': 'cisco_ios',
+            'junos': 'junos',
+            'juniper': 'junos',
+            'panos': 'panos',
+            'paloalto': 'panos',
+            'cisco_aci': 'cisco_aci',
+            'aci': 'cisco_aci'
+        }
+        
+        # Get the correct simulation device type
+        sim_device_type = device_type_map.get(normalized_type, normalized_type)
+        
         # Check if we have responses for this device type
-        if device_type not in self.responses:
-            return f"Simulation error: No responses available for device type '{device_type}'"
+        if sim_device_type not in self.responses:
+            # Try to find fallback device types
+            if sim_device_type.startswith('cisco') and 'cisco_ios' in self.responses:
+                sim_device_type = 'cisco_ios'
+            else:
+                # Use default generic response
+                if 'show version' in command.lower():
+                    return f"Device type: {device_type}\nHostname: {device_type}-demo\nVersion: 1.0\nUptime: 1 day"
+                elif 'show interfaces' in command.lower() or 'interface brief' in command.lower():
+                    return f"Interface1 Status:up\nInterface2 Status:up"
+                else:
+                    return f"Simulation response for {device_type}: {command}"
         
         # Check for exact command match
-        if command in self.responses[device_type]:
-            return self.responses[device_type][command]
+        if command in self.responses[sim_device_type]:
+            return self.responses[sim_device_type][command]
         
         # Try to find partial matches (commands that start with the given string)
-        for cmd, response in self.responses[device_type].items():
+        for cmd, response in self.responses[sim_device_type].items():
             if cmd.startswith(command) or command.startswith(cmd):
                 return response
+            
+            # Handle common command variations
+            cmd_lower = cmd.lower()
+            command_lower = command.lower()
+            if 'version' in cmd_lower and 'version' in command_lower:
+                return self.responses[sim_device_type][cmd]
+            elif 'interface' in cmd_lower and 'interface' in command_lower:
+                return self.responses[sim_device_type][cmd]
         
-        # No match found
-        return f"% Invalid command"
+        # No match found - provide generic response
+        if 'version' in command.lower():
+            return f"Version info for {device_type}\nHardware: Demo\nSoftware: 1.0\nUptime: 1 day"
+        elif 'interface' in command.lower():
+            return f"Interface1 Status:up\nInterface2 Status:up"
+        else:
+            return f"% Invalid command"
     
     def simulate_connection(self, device_info):
         """
